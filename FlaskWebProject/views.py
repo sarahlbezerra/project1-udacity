@@ -67,8 +67,10 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
+            app.logger.warning("Login failed for user:{}".format(form.username.data))
             return redirect(url_for('login'))
         login_user(user, remember=form.remember_me.data)
+        app.logger.info("Successful login for user:{}".format(form.username.data))
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('home')
@@ -110,13 +112,14 @@ def logout():
     return redirect(url_for('login'))
 
 def _load_cache():
-    # TODO: Load the cache from `msal`, if it exists
-    cache = None
+    cache = msal.SerializableTojenCache()
+    if session.get('token_cache'):
+        cache.deserialize(session['token_cache'])
     return cache
 
 def _save_cache(cache):
-    # TODO: Save the cache, if it has changed
-    pass
+    if cache.has_state_changed:
+        session['token_cache']=cache.serialize()
 
 def _build_msal_app(cache=None, authority=None):
     return msal.ConfidentialClientApplication(Config.CLIENT_ID, authority=authority or Config.AUTHORITY, client_credential=Config.CLIENT_SECRET, token_cache=cache)
