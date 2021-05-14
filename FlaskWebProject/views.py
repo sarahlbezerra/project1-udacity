@@ -60,11 +60,6 @@ def post(id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    app.logger.debug('This is a debug log message')
-    app.logger.info('This is an information log message')
-    app.logger.warn('This is a warning log message')
-    app.logger.error('This is an error message')
-    app.logger.critical('This is a critical message')
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
